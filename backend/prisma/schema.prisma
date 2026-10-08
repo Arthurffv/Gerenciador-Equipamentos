@@ -9,12 +9,22 @@ datasource db {
 
 // ───────────── Enums ─────────────
 
+enum Setor {
+  CAMPO
+  LABORATORIO
+  VIDRARIAS
+}
+
+enum Qualificacao {
+  CRITICO
+  NAO_CRITICO
+}
+
 enum StatusEquipamento {
-  ATIVO
-  INATIVO
-  EM_MANUTENCAO
-  EM_CALIBRACAO
-  BAIXADO
+  USO
+  FORA_DE_USO
+  MANUTENCAO
+  OBSOLETO
 }
 
 enum ResultadoCalibracao {
@@ -28,21 +38,21 @@ enum TipoManutencao {
   CORRETIVA
 }
 
-// ───────────── Equipamento ─────────────
+// ───────────── Equipamento (aba "PLANILHA GERAL") ─────────────
 
 model Equipamento {
-  id            String            @id @default(uuid())
-  identificacao String            @unique // TAG / código interno (ex.: EQ-0001)
-  descricao     String
-  fabricante    String
-  modelo        String
-  numeroSerie   String            @map("numero_serie")
-  status        StatusEquipamento @default(ATIVO)
-  observacoes   String?
-
-  // Periodicidades usadas para calcular vencimentos (alertas do dashboard)
-  periodicidadeCalibracaoMeses Int? @map("periodicidade_calibracao_meses")
-  periodicidadeManutencaoMeses Int? @map("periodicidade_manutencao_meses")
+  id               String            @id @default(uuid())
+  setor            Setor
+  codigo           String // ex.: AQAN 003 (único dentro do setor)
+  nome             String // coluna "Equipamento" (tipo: Anemômetro, Autoclave...)
+  amostrador       String? // coluna "Amostrador"
+  numeroSerie      String?           @map("numero_serie")
+  modelo           String?
+  fabricante       String?
+  qualificacao     Qualificacao
+  status           StatusEquipamento @default(USO)
+  localizacaoAtual String?           @map("localizacao_atual")
+  observacoes      String?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -51,27 +61,32 @@ model Equipamento {
   manutencoes      Manutencao[]
   analisesCriticas AnaliseCritica[]
 
-  @@unique([fabricante, numeroSerie])
-  @@index([status])
+  @@unique([setor, codigo])
+  @@index([setor, status])
   @@map("equipamentos")
 }
 
 // ───────────── Histórico ─────────────
 
+// Aba "PLANILHA CALIBRAÇÃO"
 model Calibracao {
   id            String      @id @default(uuid())
   equipamentoId String      @map("equipamento_id")
   equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
 
-  dataCalibracao    DateTime            @map("data_calibracao") @db.Date
-  proximaCalibracao DateTime?           @map("proxima_calibracao") @db.Date
-  laboratorio       String
-  numeroCertificado String?             @map("numero_certificado")
-  resultado         ResultadoCalibracao
+  numeroCertificado String?   @map("numero_certificado")
+  escala            String?
+  faixaCalibracao   String?   @map("faixa_calibracao")
+  dataCalibracao    DateTime? @map("data_calibracao") @db.Date
+  intervaloMeses    Int?      @map("intervalo_meses")
+  proximaCalibracao DateTime? @map("proxima_calibracao") @db.Date
+  erroMaximo        String?   @map("erro_maximo")
+  normasReferencia  String?   @map("normas_referencia")
+  laboratorio       String?
+  resultado         ResultadoCalibracao?
   observacoes       String?
 
-  // Certificado no MinIO. Guarde a CHAVE do objeto (certificadoKey) e gere
-  // URLs assinadas sob demanda; certificadoUrl é opcional (ex.: URL pública/CDN).
+  // Certificado no MinIO: guarde a CHAVE do objeto e gere URL assinada sob demanda.
   certificadoKey  String? @map("certificado_key")
   certificadoNome String? @map("certificado_nome")
   certificadoUrl  String? @map("certificado_url")
@@ -83,17 +98,19 @@ model Calibracao {
   @@map("calibracoes")
 }
 
+// Aba "PLANILHA DE MANUTENÇÃO"
 model Manutencao {
   id            String      @id @default(uuid())
   equipamentoId String      @map("equipamento_id")
   equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
 
-  tipo              TipoManutencao
-  dataManutencao    DateTime       @map("data_manutencao") @db.Date
-  proximaManutencao DateTime?      @map("proxima_manutencao") @db.Date
-  responsavel       String
-  descricao         String
-  custo             Decimal?       @db.Decimal(12, 2)
+  tipo               TipoManutencao @default(PREVENTIVA)
+  dataManutencao     DateTime?      @map("data_manutencao") @db.Date
+  periodicidadeMeses Int?           @map("periodicidade_meses")
+  proximaManutencao  DateTime?      @map("proxima_manutencao") @db.Date
+  responsavel        String?
+  descricao          String?
+  custo              Decimal?       @db.Decimal(12, 2)
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -107,11 +124,11 @@ model AnaliseCritica {
   equipamentoId String      @map("equipamento_id")
   equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
 
-  dataAnalise DateTime @map("data_analise") @db.Date
-  analista    String
-  parecer     String   // conclusão da análise crítica
-  conforme    Boolean  @default(true) // equipamento segue apto ao uso?
-  acaoNecessaria String? @map("acao_necessaria")
+  dataAnalise    DateTime @map("data_analise") @db.Date
+  analista       String
+  parecer        String
+  conforme       Boolean  @default(true)
+  acaoNecessaria String?  @map("acao_necessaria")
 
   createdAt DateTime @default(now()) @map("created_at")
 
