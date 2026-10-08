@@ -1,0 +1,11 @@
+@'
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.*
+!.env.example
+Thumbs.db
+.DS_Store
+'@ | Set-Content -Path .gitignore -Encoding utf8

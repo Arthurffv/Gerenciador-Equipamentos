@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────── Enums ─────────────
+
+enum StatusEquipamento {
+  ATIVO
+  INATIVO
+  EM_MANUTENCAO
+  EM_CALIBRACAO
+  BAIXADO
+}
+
+enum ResultadoCalibracao {
+  APROVADA
+  APROVADA_COM_RESTRICAO
+  REPROVADA
+}
+
+enum TipoManutencao {
+  PREVENTIVA
+  CORRETIVA
+}
+
+// ───────────── Equipamento ─────────────
+
+model Equipamento {
+  id            String            @id @default(uuid())
+  identificacao String            @unique // TAG / código interno (ex.: EQ-0001)
+  descricao     String
+  fabricante    String
+  modelo        String
+  numeroSerie   String            @map("numero_serie")
+  status        StatusEquipamento @default(ATIVO)
+  observacoes   String?
+
+  // Periodicidades usadas para calcular vencimentos (alertas do dashboard)
+  periodicidadeCalibracaoMeses Int? @map("periodicidade_calibracao_meses")
+  periodicidadeManutencaoMeses Int? @map("periodicidade_manutencao_meses")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  calibracoes      Calibracao[]
+  manutencoes      Manutencao[]
+  analisesCriticas AnaliseCritica[]
+
+  @@unique([fabricante, numeroSerie])
+  @@index([status])
+  @@map("equipamentos")
+}
+
+// ───────────── Histórico ─────────────
+
+model Calibracao {
+  id            String      @id @default(uuid())
+  equipamentoId String      @map("equipamento_id")
+  equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
+
+  dataCalibracao    DateTime            @map("data_calibracao") @db.Date
+  proximaCalibracao DateTime?           @map("proxima_calibracao") @db.Date
+  laboratorio       String
+  numeroCertificado String?             @map("numero_certificado")
+  resultado         ResultadoCalibracao
+  observacoes       String?
+
+  // Certificado no MinIO. Guarde a CHAVE do objeto (certificadoKey) e gere
+  // URLs assinadas sob demanda; certificadoUrl é opcional (ex.: URL pública/CDN).
+  certificadoKey  String? @map("certificado_key")
+  certificadoNome String? @map("certificado_nome")
+  certificadoUrl  String? @map("certificado_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([equipamentoId, dataCalibracao(sort: Desc)])
+  @@index([proximaCalibracao])
+  @@map("calibracoes")
+}
+
+model Manutencao {
+  id            String      @id @default(uuid())
+  equipamentoId String      @map("equipamento_id")
+  equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
+
+  tipo              TipoManutencao
+  dataManutencao    DateTime       @map("data_manutencao") @db.Date
+  proximaManutencao DateTime?      @map("proxima_manutencao") @db.Date
+  responsavel       String
+  descricao         String
+  custo             Decimal?       @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([equipamentoId, dataManutencao(sort: Desc)])
+  @@index([proximaManutencao])
+  @@map("manutencoes")
+}
+
+model AnaliseCritica {
+  id            String      @id @default(uuid())
+  equipamentoId String      @map("equipamento_id")
+  equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
+
+  dataAnalise DateTime @map("data_analise") @db.Date
+  analista    String
+  parecer     String   // conclusão da análise crítica
+  conforme    Boolean  @default(true) // equipamento segue apto ao uso?
+  acaoNecessaria String? @map("acao_necessaria")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([equipamentoId, dataAnalise(sort: Desc)])
+  @@map("analises_criticas")
+}
