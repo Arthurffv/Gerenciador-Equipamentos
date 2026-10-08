@@ -2,15 +2,10 @@ import { Bell, CircleHelp, Menu, Search } from "lucide-react";
 
 type HeaderProps = {
   onToggleSidebar: () => void;
-  userName?: string;
   notifications?: number;
 };
 
-export default function Header({
-  onToggleSidebar,
-  userName = "Renato Luiz de Mello",
-  notifications = 0,
-}: HeaderProps) {
+export default function Header({ onToggleSidebar, notifications = 0 }: HeaderProps) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
       <button
@@ -54,12 +49,6 @@ export default function Header({
               {notifications > 99 ? "99+" : notifications}
             </span>
           )}
-        </button>
-
-        {/* Menu de usuário */}
-        <button type="button" className="flex items-center gap-3" aria-label="Menu do usuário">
-          <span className="hidden text-sm font-semibold text-slate-600 sm:block">{userName}</span>
-          <span className="h-10 w-10 rounded-full border-2 border-slate-500 bg-white" />
         </button>
       </div>
     </header>
