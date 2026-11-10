@@ -15,6 +15,12 @@ enum Setor {
   VIDRARIAS
 }
 
+enum PapelUsuario{
+  ADMIN
+  EDITOR
+  LEITOR
+}
+
 enum Qualificacao {
   CRITICO
   NAO_CRITICO
@@ -89,7 +95,7 @@ model Calibracao {
   // Certificado no MinIO: guarde a CHAVE do objeto e gere URL assinada sob demanda.
   certificadoKey  String? @map("certificado_key")
   certificadoNome String? @map("certificado_nome")
-  certificadoUrl  String? @map("certificado_url")
+  certificadoUrl  String? @map("certificado_url") // sem uso: a URL assinada é gerada na hora, a partir da chave
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -130,8 +136,29 @@ model AnaliseCritica {
   conforme       Boolean  @default(true)
   acaoNecessaria String?  @map("acao_necessaria")
 
+  // Documento da análise crítica no MinIO (mesma ideia do certificado da calibração).
+  arquivoKey  String? @map("arquivo_key") 
+  arquivoNome String? @map("arquivo_nome")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([equipamentoId, dataAnalise(sort: Desc)])
   @@map("analises_criticas")
+}
+
+// ───────────── Acesso ───────────── 
+
+model Usuario {  
+id        String       @id @default(uuid())
+nome      String  
+email     String       @unique
+senhaHash String       @map("senha_hash") 
+papel     PapelUsuario @default(LEITOR)  
+ativo     Boolean      @default(true)   
+
+createdAt    DateTime  @default(now()) @map("created_at")  
+updatedAt    DateTime  @updatedAt @map("updated_at")  
+ultimoAcesso DateTime? @map("ultimo_acesso")   
+
+@@map("usuarios")
 }
