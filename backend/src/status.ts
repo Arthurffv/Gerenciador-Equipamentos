@@ -16,14 +16,26 @@ export const DIAS_PARA_A_VENCER = 30;
 
 const DIA_MS = 86_400_000;
 
+/** Soma meses sem estourar o mês: 31/01 + 1 mês = 28/02 (e não 03/03). Um prazo a mais seria um risco de conformidade. */
 function adicionarMeses(data: Date, meses: number): Date {
-  const d = new Date(data.getTime());
-  d.setUTCMonth(d.getUTCMonth() + meses);
-  return d;
+  const ano = data.getUTCFullYear();
+  const mes = data.getUTCMonth() + meses;
+  const ultimoDiaDoMes = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(ano, mes, Math.min(data.getUTCDate(), ultimoDiaDoMes)));
 }
 
+// "Hoje" vale no fuso da empresa, não no do servidor: um servidor em UTC viraria o dia às 21h de Brasília.
+const FUSO = process.env.FUSO_HORARIO ?? "America/Sao_Paulo";
+const formatadorDeDia = new Intl.DateTimeFormat("en-CA", { timeZone: FUSO, year: "numeric", month: "2-digit", day: "2-digit" });
+
 function hojeEmUTC(base: Date): number {
-  return Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
+  const [ano, mes, dia] = formatadorDeDia.format(base).split("-").map(Number);
+  return Date.UTC(ano, mes - 1, dia);
+}
+
+/** Dias entre hoje e a data (negativo = já passou). */
+export function diasAte(data: Date, base: Date = new Date()): number {
+  return Math.floor((data.getTime() - hojeEmUTC(base)) / DIA_MS);
 }
 
 export function situacaoPorData(
