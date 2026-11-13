@@ -1,33 +1,13 @@
-import { useEffect, useState } from "react";
-import { buscarEquipamentos, type EquipamentoLinha } from "../api/equipamentos";
+import { buscarEquipamentos, buscarEquipamento } from "../api/equipamentos";
+import { useCarregar } from "./useCarregar";
 
+/** Lista de equipamentos de um setor (alimenta as abas Geral, Calibração e Manutenção). */
 export function useEquipamentos(setor: string | undefined) {
-  const [dados, setDados] = useState<EquipamentoLinha[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+  const { dados, ...resto } = useCarregar(setor, (signal) => buscarEquipamentos(setor!, signal));
+  return { dados: dados ?? [], ...resto };
+}
 
-  useEffect(() => {
-    if (!setor) return;
-    const controle = new AbortController();
-    setCarregando(true);
-    setErro(null);
-
-    buscarEquipamentos(setor, controle.signal)
-      .then(setDados)
-      .catch((e: Error) => {
-        if (e.name === "AbortError") return;
-        setErro(
-          e instanceof TypeError
-            ? "Não foi possível conectar à API. O backend está rodando (npm run dev)?"
-            : e.message
-        );
-      })
-      .finally(() => {
-        if (!controle.signal.aborted) setCarregando(false);
-      });
-
-    return () => controle.abort();
-  }, [setor]);
-
-  return { dados, carregando, erro };
+/** Um equipamento com todo o histórico (calibrações, manutenções, análises críticas). */
+export function useEquipamento(id: string | undefined) {
+  return useCarregar(id, (signal) => buscarEquipamento(id!, signal));
 }

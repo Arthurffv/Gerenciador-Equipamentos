@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Users, X } from "lucide-react";
+import { useAuth } from "../../auth/contexto";
 import { abas, setores, type Setor } from "../../config/setores";
 
 const linkBase =
@@ -59,6 +60,8 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const { ehAdmin } = useAuth();
+
   // Em telas pequenas, fecha o menu ao navegar
   const handleNavigate = () => {
     if (window.innerWidth < 1024) onClose();
@@ -96,9 +99,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 pb-6 pt-6">
           <ul className="space-y-1">
+            <li>
+              <NavLink to="/" end onClick={handleNavigate} className={({ isActive }) => `${linkBase} ${isActive ? "bg-brand-active font-medium text-white" : ""}`}>
+                <LayoutDashboard size={18} aria-hidden /> Painel
+              </NavLink>
+            </li>
             {setores.map((setor) => (
               <SetorMenu key={setor.slug} setor={setor} onNavigate={handleNavigate} />
             ))}
+            {ehAdmin && (
+              <li className="mt-4 border-t border-white/15 pt-4">
+                <NavLink to="/usuarios" onClick={handleNavigate} className={({ isActive }) => `${linkBase} ${isActive ? "bg-brand-active font-medium text-white" : ""}`}>
+                  <Users size={18} aria-hidden /> Usuários
+                </NavLink>
+              </li>
+            )}
           </ul>
         </nav>
       </aside>

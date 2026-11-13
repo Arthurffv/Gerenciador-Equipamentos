@@ -1,4 +1,4 @@
-import type { EquipamentoLinha, Situacao } from "../../api/equipamentos";
+import type { EquipamentoLinha, ResultadoCalibracao, Situacao, TipoManutencao } from "../../api/equipamentos";
 
 const base = "inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold";
 
@@ -33,5 +33,33 @@ export function QualificacaoBadge({ valor }: { valor: EquipamentoLinha["qualific
     <span className={`${base} bg-brand/10 text-brand`}>Crítico</span>
   ) : (
     <span className={`${base} bg-slate-100 text-slate-600`}>Não crítico</span>
+  );
+}
+
+const resultados: Record<ResultadoCalibracao, { texto: string; cor: string }> = {
+  APROVADA: { texto: "Aprovada", cor: "bg-green-100 text-green-700" },
+  APROVADA_COM_RESTRICAO: { texto: "Aprovada com restrição", cor: "bg-amber-100 text-amber-800" },
+  REPROVADA: { texto: "Reprovada", cor: "bg-red-100 text-red-700" },
+};
+
+export function ResultadoBadge({ resultado }: { resultado: ResultadoCalibracao | null }) {
+  if (!resultado) return <span className="text-slate-400">—</span>;
+  const r = resultados[resultado];
+  return <span className={`${base} ${r.cor}`}>{r.texto}</span>;
+}
+
+export function ConformeBadge({ conforme }: { conforme: boolean }) {
+  return conforme ? (
+    <span className={`${base} bg-green-100 text-green-700`}>Conforme</span>
+  ) : (
+    <span className={`${base} bg-red-100 text-red-700`}>Não conforme</span>
+  );
+}
+
+export function TipoManutencaoBadge({ tipo }: { tipo: TipoManutencao }) {
+  return tipo === "PREVENTIVA" ? (
+    <span className={`${base} bg-sky-100 text-sky-700`}>Preventiva</span>
+  ) : (
+    <span className={`${base} bg-amber-100 text-amber-800`}>Corretiva</span>
   );
 }

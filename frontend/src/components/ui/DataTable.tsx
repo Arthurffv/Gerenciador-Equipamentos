@@ -11,11 +11,13 @@ type DataTableProps<T> = {
   linhas: T[];
   chave: (linha: T) => string;
   vazio?: string;
+  /** Classes de altura máxima da área rolável (padrão: 62% da tela). */
+  altura?: string;
 };
 
-export default function DataTable<T>({ colunas, linhas, chave, vazio = "Nenhum registro encontrado." }: DataTableProps<T>) {
+export default function DataTable<T>({ colunas, linhas, chave, vazio = "Nenhum registro encontrado.", altura = "max-h-[62vh]" }: DataTableProps<T>) {
   return (
-    <div className="max-h-[62vh] overflow-auto rounded-2xl border border-slate-200">
+    <div className={`${altura} overflow-auto rounded-2xl border border-slate-200`}>
       <table className="min-w-full text-left text-sm">
         <thead className="sticky top-0 z-10 bg-brand text-white">
           <tr>
