@@ -19,8 +19,8 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-brand px-4 font-sans text-slate-800">
       <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-xl">
-        <div className="grid h-32 place-items-center border-b border-slate-100">
-          <img src="/logo.svg" alt="Logotipo da empresa" className="max-h-20 max-w-[60%]" />
+        <div className="grid h-32 place-items-center bg-brand px-8">
+          <img src="/logo-branca.png" alt="Grupo Aqua Brasil" className="max-h-16 w-auto max-w-full" />
         </div>
 
         <form

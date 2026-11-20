@@ -83,18 +83,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           rounded-br-[2rem] bg-brand shadow-xl lg:static lg:z-auto lg:shadow-none`}
         aria-label="Menu principal"
       >
-        {/* Logo */}
-        <div className="relative flex h-44 shrink-0 items-center justify-center rounded-br-[2rem] bg-white">
+        {/* Logo: versão branca sobre o fundo azul do menu */}
+        <div className="relative flex h-32 shrink-0 items-center justify-center border-b border-white/15 px-6">
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 rounded p-1 text-brand lg:hidden"
+            className="absolute right-3 top-3 rounded p-1 text-white lg:hidden"
             aria-label="Fechar menu"
           >
             <X size={20} />
           </button>
-          {/* Troque pelo logotipo real em /public/logo.svg */}
-          <img src="/logo.svg" alt="Logotipo da empresa" className="max-h-24 max-w-[70%]" />
+          <img src="/logo-branca.png" alt="Grupo Aqua Brasil" className="max-h-20 w-auto max-w-full" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 pb-6 pt-6">
